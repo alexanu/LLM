@@ -1,5 +1,24 @@
-openai
-tiktoken
 pandas
+
+streamlit 
+
+openai
+google-generativeai
+tiktoken
+ollama 
+langchain
+langchain_community
+phidata
+embedchain
+
+pip install yfinance --proxy=http://de001-surf.zone2.proxy.allianz:8080/
+
+yfinance
 newspaper3k
+duckduckgo-search
 lxml_html_clean
+pypdf
+arxiv
+pillow
+scrapegraphai
+playwright
