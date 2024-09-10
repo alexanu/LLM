@@ -1,5 +1,158 @@
 
 
+
+# Sceleton
+
+        import sys
+        import os
+
+        sys.path.append(os.path.abspath('.'))
+
+        import streamlit as st
+        import time
+        from langchain.chains import ConversationChain
+        from langchain_openai import ChatOpenAI
+
+        from langchain_core.output_parsers import StrOutputParser
+        from langchain_core.prompts import ChatPromptTemplate
+
+        def faq():
+            st.markdown(
+                """
+        # FAQ
+        ## How to use App Template?
+        This is a basic template to set up Langchain Demo App with Docker
+
+
+        ## What Libraries are being use?
+        Basic Setup is using langchain, streamlit and openai.
+
+        ## How to test the APP?
+        Set up the OpenAI API keys and run the App
+
+        ## Disclaimer?
+        This is a template App, when using with openai_api key, you will be charged a nominal fee depending
+        on number of prompts etc.
+
+        """
+            )
+
+
+        def set_open_api_key(api_key: str):
+            st.session_state["OPENAI_API_KEY"] = api_key
+            st.session_state["open_api_key_configured"] = True
+            print('OPENAI API key is Configured Successfully!')
+
+
+        def sidebar():
+            with st.sidebar:
+                st.markdown(
+                    "## How to use\n"
+                    "1. Enter your [OpenAI API key](https://platform.openai.com/account/api-keys) below🔑\n"  # noqa: E501
+                )
+                open_api_key_input = st.text_input(
+                    "Openai API Key",
+                    type="password",
+                    placeholder="Paste your API key here (sk-...)",
+                    help="You can get your API key from https://platform.openai.com/account/api-keys.",  # noqa: E501
+                    value=st.session_state.get("OPEN_API_KEY", ""),
+                )
+
+                if open_api_key_input:
+                    # print(f'Entered API is {open_api_key_input}')
+                    set_open_api_key(open_api_key_input)
+
+                if not st.session_state.get("open_api_key_configured"):
+                    st.error("Please configure your Open API key!")
+                else:
+                    st.markdown("Open API Key Configured!")
+
+                st.markdown("---")
+                st.markdown("# About")
+                st.markdown(
+                    "📖 This App is template of lanchain-streamlit-docker example"
+                )
+                st.markdown("---")
+
+                faq()
+
+        def load_chain():
+            """Logic for loading the chain you want to use should go here."""
+            llm = ChatOpenAI(
+                model="gpt-4o",
+                openai_api_key=st.session_state.get("OPENAI_API_KEY"),
+                temperature=0,
+                max_tokens=None,
+                timeout=None,
+                max_retries=2,
+                # api_key="...",  # if you prefer to pass api key in directly instaed of using env vars
+                # base_url="...",
+                # organization="...",
+                # other params...
+                )
+            chain = ConversationChain(llm=llm)
+            return chain
+
+
+        def get_text():
+            input_text = st.text_input("You: ", "Hello, how are you?", key="input")
+            return input_text
+
+
+        if __name__ == "__main__":
+
+            st.set_page_config(
+                page_title="Chat App: LangChain Demo",
+                page_icon="📖",
+                layout="wide",
+                initial_sidebar_state="expanded", )
+            st.header("📖 Chat App: LangChain Demo")
+            sidebar()
+
+            if not st.session_state.get("open_api_key_configured"):
+                st.error("Please configure your API Keys!")
+            else:
+                chain = load_chain()
+
+                if "messages" not in st.session_state:
+                    st.session_state["messages"] = [
+                        {"role": "assistant", "content": "How can I help you?"}]
+
+                # Display chat messages from history on app rerun
+                for message in st.session_state.messages:
+                    with st.chat_message(message["role"]):
+                        st.markdown(message["content"])
+
+                if user_input := st.chat_input("What is your question?"):
+                    # Add user message to chat history
+                    st.session_state.messages.append({"role": "user", "content": user_input})
+                    # Display user message in chat message container
+                    with st.chat_message("user"):
+                        st.markdown(user_input)
+
+                    with st.chat_message("assistant"):
+                        message_placeholder = st.empty()
+                        full_response = ""
+
+                    with st.chat_message("assistant"):
+                        message_placeholder = st.empty()
+                        full_response = ""
+
+                        with st.spinner('CHAT-BOT is at Work ...'):
+                            assistant_response = output = chain.run(input=user_input)
+                        # Simulate stream of response with milliseconds delay
+                        for chunk in assistant_response.split():
+                            full_response += chunk + " "
+                            time.sleep(0.05)
+                            # Add a blinking cursor to simulate typing
+                            message_placeholder.markdown(full_response + "▌")
+                        message_placeholder.markdown(full_response)
+                    st.session_state.messages.append({"role": "assistant", "content": full_response})
+
+
+
+
+
 # Stocks performance from Yahoo
         import streamlit as st
         from phi.assistant import Assistant
@@ -750,3 +903,66 @@
 
             if uploaded_file and not prompt:
                 st.warning("Please enter a text query to accompany the image.")
+
+
+# Chat with the Streamlit docs, powered by LlamaIndex
+        import streamlit as st
+        import openai
+        from llama_index.llms.openai import OpenAI
+        from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
+
+        st.set_page_config(page_title="Chat with the Streamlit docs, powered by LlamaIndex", page_icon="🦙", layout="centered", initial_sidebar_state="auto", menu_items=None)
+        openai.api_key = st.secrets.openai_key
+        st.title("Chat with the Streamlit docs, powered by LlamaIndex 💬🦙")
+        st.info("Check out the full tutorial to build this app in our [blog post](https://blog.streamlit.io/build-a-chatbot-with-custom-data-sources-powered-by-llamaindex/)", icon="📃")
+
+        # here is more about session_state: https://docs.streamlit.io/develop/api-reference/caching-and-state/st.session_state?ref=blog.streamlit.io
+        if "messages" not in st.session_state.keys():  # Initialize the chat messages history
+            st.session_state.messages = [
+                {
+                    "role": "assistant",
+                    "content": "Ask me a question about Streamlit's open-source Python library!",
+                }
+            ]
+
+        @st.cache_resource(show_spinner=False)  # to minimize the number of times the data is loaded and indexed
+        def load_data():
+            # store your Knowledge Base files in a folder called data within the app
+            # data for current app: https://github.com/carolinedlu/llamaindex-chat-with-streamlit-docs/tree/main/data
+            reader = SimpleDirectoryReader(input_dir="./data", recursive=True)
+            docs = reader.load_data()
+            Settings.llm = OpenAI(
+                model="gpt-3.5-turbo",
+                temperature=0.2,
+                system_prompt="""
+                You are an expert on the Streamlit Python library and your job is to answer technical questions. 
+                Assume that all questions are related to the Streamlit Python library. 
+                Keep your answers technical and based on facts and do not hallucinate features.""",
+            )
+            index = VectorStoreIndex.from_documents(docs)
+            return index
+
+
+        index = load_data()
+
+        if "chat_engine" not in st.session_state.keys():  # Initialize the chat engine
+            st.session_state.chat_engine = index.as_chat_engine(
+                chat_mode="condense_question", # because it always queries the knowledge base when generating a response
+                verbose=True, streaming=True
+            )
+
+        if prompt := st.chat_input("Ask a question"):  # Prompt for user input and save to chat history
+            st.session_state.messages.append({"role": "user", "content": prompt})
+
+        for message in st.session_state.messages:  # Write message history to UI
+            with st.chat_message(message["role"]):
+                st.write(message["content"])
+
+        # If last message is not from assistant, generate a new response
+        if st.session_state.messages[-1]["role"] != "assistant":
+            with st.chat_message("assistant"):
+                response_stream = st.session_state.chat_engine.stream_chat(prompt)
+                st.write_stream(response_stream.response_gen)
+                message = {"role": "assistant", "content": response_stream.response}
+                # Add response to message history
+                st.session_state.messages.append(message)
